@@ -120,6 +120,9 @@ def _estimate_von_mises_fisher_parameters(X, resp):
 
     kappas : array-like
         The concentration parameter kappas of the current components.
+        
+    References: 
+    [1] Clustering on the Unit Hypersphere using von Mises-Fisher Distributions. JMLR 2025.
     """
     n_features = X.shape[1]
     nk = resp.sum(axis=0) + 10 * np.finfo(resp.dtype).eps
@@ -129,13 +132,20 @@ def _estimate_von_mises_fisher_parameters(X, resp):
     # r = I[d/2](kappa) / I[d/2 -1](kappa)
     #   = I[d/2](kappa) * exp(-kappa) / I[d/2 -1](kappa) * exp(-kappa)
     #   = ive(d/2, kappa) / ive(d/2 -1, kappa)
-    kappas = np.zeros_like(res_len)
-    for idx, r in enumerate(res_len):
-        def eq_for_kappa(k):
-            return expBessel(n_features/2, k)/expBessel(n_features/2-1, k) - r
-        sol = optimize.root_scalar(eq_for_kappa, method="brentq", bracket=(1e-8, 1e9))
-        kappas[idx] = sol.root
-    # kappas = (res_len * n_features - res_len**3) / (1 - res_len**2)
+    ### if solve with Newton's method, according to [1]
+    #    let A[d](kappa) = I[d/2](kappa) / I[d/2 -1](kappa)
+    #    then the differientiation  A^{\prime}[d](kappa) = 1 - A[d](kappa) **2 - (d-1)*A[d](kappa)/kappa
+    ####### the following is from scipy.stats.vonmises_fisher.fit()
+    ####### expBessel(d, k) will be 0 (underflow) for large d (e.g., d=300)
+    # kappas = np.zeros_like(res_len)
+    # for idx, r in enumerate(res_len):
+    #     def eq_for_kappa(k):
+    #         return expBessel(n_features/2, k)/expBessel(n_features/2-1, k) - r
+    #     sol = optimize.root_scalar(eq_for_kappa, method="brentq", bracket=(1e-8, 1e9))
+    #     kappas[idx] = sol.root
+
+    # according to [1], kappa = (r*d-r**3)/(1-r**2) 
+    kappas = (res_len * n_features - res_len**3) / (1 - res_len**2)
     return nk, means, kappas
 
 
