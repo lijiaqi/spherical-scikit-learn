@@ -1,0 +1,938 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>spsklearn.mixture._von_mises_fisher_mixture &mdash; Spherical-Scikit-Learn 0.1.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home" alt="Documentation Home"> Spherical-Scikit-Learn
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Main:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../autoapi/index.html">API Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Spherical-Scikit-Learn</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+          <li><a href="../mixture.html">spsklearn.mixture</a> &raquo;</li>
+        
+      <li>spsklearn.mixture._von_mises_fisher_mixture</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for spsklearn.mixture._von_mises_fisher_mixture</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;von Mises-Fisher Mixture Model.&quot;&quot;&quot;</span>
+
+<span class="c1"># Author: Jiaqi Li &lt;lijiaqi.academic@outlook.com&gt;</span>
+<span class="c1"># License: BSD 3 clause</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">scipy</span> <span class="k">as</span> <span class="nn">sp</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">linalg</span>
+<span class="kn">from</span> <span class="nn">scipy.special</span> <span class="kn">import</span> <span class="n">ive</span> <span class="k">as</span> <span class="n">expBessel</span>
+<span class="kn">from</span> <span class="nn">scipy.special</span> <span class="kn">import</span> <span class="n">logsumexp</span>
+<span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="kn">import</span> <span class="n">vonmises_fisher</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">optimize</span>
+
+<span class="kn">from</span> <span class="nn">sklearn.utils</span> <span class="kn">import</span> <span class="n">check_array</span><span class="p">,</span> <span class="n">check_random_state</span>
+<span class="kn">from</span> <span class="nn">sklearn.utils.validation</span> <span class="kn">import</span> <span class="n">check_is_fitted</span>
+<span class="kn">from</span> <span class="nn">sklearn.utils._param_validation</span> <span class="kn">import</span> <span class="n">StrOptions</span>
+<span class="kn">from</span> <span class="nn">sklearn.utils.extmath</span> <span class="kn">import</span> <span class="n">row_norms</span>
+<span class="kn">from</span> <span class="nn">sklearn.mixture._base</span> <span class="kn">import</span> <span class="n">BaseMixture</span><span class="p">,</span> <span class="n">_check_shape</span>
+<span class="kn">from</span> <span class="nn">sklearn.preprocessing</span> <span class="kn">import</span> <span class="n">normalize</span>
+<span class="kn">from</span> <span class="nn">sklearn.base</span> <span class="kn">import</span> <span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">DensityMixin</span><span class="p">,</span> <span class="n">_fit_context</span>
+<span class="kn">from</span> <span class="nn">sklearn.exceptions</span> <span class="kn">import</span> <span class="n">ConvergenceWarning</span>
+<span class="kn">from</span> <span class="nn">..cluster</span> <span class="kn">import</span> <span class="n">SphericalKMeans</span><span class="p">,</span> <span class="n">spherical_k_means_plusplus</span>
+<span class="kn">from</span> <span class="nn">..utils</span> <span class="kn">import</span> <span class="n">check_spherical_array</span>
+
+<span class="c1">###############################################################################</span>
+<span class="c1"># von Mises-Fisher mixture shape checkers used by the vonMisesFisherMixture class</span>
+
+<div class="viewcode-block" id="check_nan"><a class="viewcode-back" href="../../../autoapi/spsklearn/mixture/_von_mises_fisher_mixture/index.html#spsklearn.mixture._von_mises_fisher_mixture.check_nan">[docs]</a><span class="k">def</span> <span class="nf">check_nan</span><span class="p">(</span><span class="n">array</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">array</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">()</span></div>
+
+<span class="k">def</span> <span class="nf">_check_weights</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="n">n_components</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Check the user provided &#39;weights&#39;.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    weights : array-like of shape (n_components,)</span>
+<span class="sd">        The proportions of components of each mixture.</span>
+
+<span class="sd">    n_components : int</span>
+<span class="sd">        Number of components.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    weights : array, shape (n_components,)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">weights</span> <span class="o">=</span> <span class="n">check_array</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">],</span> <span class="n">ensure_2d</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">_check_shape</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="p">(</span><span class="n">n_components</span><span class="p">,),</span> <span class="s2">&quot;weights&quot;</span><span class="p">)</span>
+
+    <span class="c1"># check range</span>
+    <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">less</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span> <span class="ow">or</span> <span class="nb">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">greater</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;The parameter &#39;weights&#39; should be in the range &quot;</span>
+            <span class="s2">&quot;[0, 1], but got max value </span><span class="si">%.5f</span><span class="s2">, min value </span><span class="si">%.5f</span><span class="s2">&quot;</span>
+            <span class="o">%</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">weights</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">weights</span><span class="p">))</span>
+        <span class="p">)</span>
+
+    <span class="c1"># check normalization</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">weights</span><span class="p">)),</span> <span class="mf">0.0</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;The parameter &#39;weights&#39; should be normalized, but got sum(weights) = </span><span class="si">%.5f</span><span class="s2">&quot;</span>
+            <span class="o">%</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">weights</span>
+
+
+<span class="k">def</span> <span class="nf">_check_means</span><span class="p">(</span><span class="n">means</span><span class="p">,</span> <span class="n">n_components</span><span class="p">,</span> <span class="n">n_features</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Validate the provided &#39;means&#39;.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    means : array-like of shape (n_components, n_features)</span>
+<span class="sd">        The centers of the current components.</span>
+
+<span class="sd">    n_components : int</span>
+<span class="sd">        Number of components.</span>
+
+<span class="sd">    n_features : int</span>
+<span class="sd">        Number of features.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    means : array, (n_components, n_features)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">means</span> <span class="o">=</span> <span class="n">check_array</span><span class="p">(</span><span class="n">means</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">],</span> <span class="n">ensure_2d</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">_check_shape</span><span class="p">(</span><span class="n">means</span><span class="p">,</span> <span class="p">(</span><span class="n">n_components</span><span class="p">,</span> <span class="n">n_features</span><span class="p">),</span> <span class="s2">&quot;means&quot;</span><span class="p">)</span>
+    <span class="n">check_spherical_array</span><span class="p">(</span><span class="n">means</span><span class="p">,</span> <span class="n">spherical_axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">means</span>
+
+
+<span class="k">def</span> <span class="nf">_check_kappas</span><span class="p">(</span><span class="n">kappas</span><span class="p">,</span> <span class="n">n_components</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Check a kappas vector is positive.&quot;&quot;&quot;</span>
+    <span class="n">kappas</span> <span class="o">=</span> <span class="n">check_array</span><span class="p">(</span><span class="n">kappas</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">],</span> <span class="n">ensure_2d</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">_check_shape</span><span class="p">(</span><span class="n">kappas</span><span class="p">,</span> <span class="p">(</span><span class="n">n_components</span><span class="p">,),</span> <span class="s2">&quot;kappas&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">less_equal</span><span class="p">(</span><span class="n">kappas</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;kappas&#39; should be all positive&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">kappas</span>
+
+
+<span class="c1">###############################################################################</span>
+<span class="c1"># von Mises-Fisher mixture parameters estimators (used by the M-Step)</span>
+
+<span class="k">def</span> <span class="nf">_estimate_von_mises_fisher_parameters</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">resp</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Estimate the von Mises-Fisher distribution parameters.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    X : array-like of shape (n_samples, n_features)</span>
+<span class="sd">        The input data array.</span>
+
+<span class="sd">    resp : array-like of shape (n_samples, n_components)</span>
+<span class="sd">        The responsibilities for each data sample in X.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    nk : array-like of shape (n_components,)</span>
+<span class="sd">        The numbers of data samples in the current components.</span>
+
+<span class="sd">    means : array-like of shape (n_components, n_features)</span>
+<span class="sd">        The centers of the current components.</span>
+
+<span class="sd">    kappas : array-like</span>
+<span class="sd">        The concentration parameter kappas of the current components.</span>
+<span class="sd">        </span>
+<span class="sd">    References: </span>
+<span class="sd">    [1] Clustering on the Unit Hypersphere using von Mises-Fisher Distributions. JMLR 2025.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">n_features</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">nk</span> <span class="o">=</span> <span class="n">resp</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="n">resp</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">eps</span>
+    <span class="n">resultant</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">resp</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">X</span><span class="p">)</span> <span class="o">/</span> <span class="n">nk</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
+    <span class="n">means</span><span class="p">,</span> <span class="n">res_len</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">(</span><span class="n">resultant</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="s2">&quot;l2&quot;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">return_norm</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="c1">### kappa is the solution to the equation:</span>
+    <span class="c1"># r = I[d/2](kappa) / I[d/2 -1](kappa)</span>
+    <span class="c1">#   = I[d/2](kappa) * exp(-kappa) / I[d/2 -1](kappa) * exp(-kappa)</span>
+    <span class="c1">#   = ive(d/2, kappa) / ive(d/2 -1, kappa)</span>
+    <span class="c1">### if solve with Newton&#39;s method, according to [1]</span>
+    <span class="c1">#    let A[d](kappa) = I[d/2](kappa) / I[d/2 -1](kappa)</span>
+    <span class="c1">#    then the differientiation  A^{\prime}[d](kappa) = 1 - A[d](kappa) **2 - (d-1)*A[d](kappa)/kappa</span>
+    <span class="c1">####### the following is from scipy.stats.vonmises_fisher.fit()</span>
+    <span class="c1">####### expBessel(d, k) will be 0 (underflow) for large d (e.g., d=300)</span>
+    <span class="c1"># kappas = np.zeros_like(res_len)</span>
+    <span class="c1"># for idx, r in enumerate(res_len):</span>
+    <span class="c1">#     def eq_for_kappa(k):</span>
+    <span class="c1">#         return expBessel(n_features/2, k)/expBessel(n_features/2-1, k) - r</span>
+    <span class="c1">#     sol = optimize.root_scalar(eq_for_kappa, method=&quot;brentq&quot;, bracket=(1e-8, 1e9))</span>
+    <span class="c1">#     kappas[idx] = sol.root</span>
+
+    <span class="c1"># according to [1], kappa = (r*d-r**3)/(1-r**2) </span>
+    <span class="n">kappas</span> <span class="o">=</span> <span class="p">(</span><span class="n">res_len</span> <span class="o">*</span> <span class="n">n_features</span> <span class="o">-</span> <span class="n">res_len</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">res_len</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">nk</span><span class="p">,</span> <span class="n">means</span><span class="p">,</span> <span class="n">kappas</span>
+
+
+<span class="k">def</span> <span class="nf">_flipudlr</span><span class="p">(</span><span class="n">array</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Reverse the rows and columns of an array.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">flipud</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">fliplr</span><span class="p">(</span><span class="n">array</span><span class="p">))</span>
+
+
+<span class="c1">###############################################################################</span>
+<span class="c1"># von Mises-Fisher mixture probability estimators</span>
+<span class="k">def</span> <span class="nf">_estimate_log_von_mises_fisher_prob</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">means</span><span class="p">,</span> <span class="n">kappas</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Estimate the log von Mises-Fisher probability.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    X : array-like of shape (n_samples, n_features)</span>
+
+<span class="sd">    means : array-like of shape (n_components, n_features)</span>
+
+<span class="sd">    kappas : array-like of shape (n_components,)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    log_prob : array, shape (n_samples, n_components)</span>
+<span class="sd">        C = kappa**(d/2-1)/( (2*pi)**(d/2) * I_{d/2-1}(kappa)  )</span>
+<span class="sd">          = kappa**(d/2-1) * exp(-kappa) </span>
+<span class="sd">                /( (2*pi)**(d/2) * I_{d/2-1}(kappa)*exp(-kappa)  )</span>
+<span class="sd">            = kappa**(d/2-1) * exp(-kappa) </span>
+<span class="sd">                /( (2*pi)**(d/2) * scipy.special.ive(d/2-1, kappa) )</span>
+<span class="sd">        log C = (d/2-1)*\log(kappa) - kappa - (d/2)*\log(2*pi) - ive(d/2-1, kappa)</span>
+<span class="sd">        log p(x; mu, kappa) = kappa * X.dot(mu.T) + log_C</span>
+<span class="sd">    Notes:</span>
+<span class="sd">        ive(r, z) = iv(r, z) * exp(-abs(z.real))</span>
+<span class="sd">        ive is useful for large arguments z: </span>
+<span class="sd">            for these, iv easily overflows, </span>
+<span class="sd">            while ive does not due to the exponential scaling.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="n">means</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">==</span><span class="n">kappas</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;means.shape[0]!=kappa.shape[0] !&quot;</span>
+    <span class="k">assert</span> <span class="n">means</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">==</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s2">&quot;means.shape[1]!=X.shape[1] !&quot;</span>
+    <span class="n">n_samples</span><span class="p">,</span> <span class="n">n_features</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">n_components</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">means</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">log_C</span> <span class="o">=</span> <span class="p">(</span><span class="n">n_features</span><span class="o">/</span><span class="mi">2</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">kappas</span><span class="p">)</span> <span class="o">-</span> <span class="n">kappas</span> <span class="o">-</span> <span class="n">n_features</span><span class="o">/</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span> \
+        <span class="o">-</span>  <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">expBessel</span><span class="p">(</span><span class="n">n_features</span><span class="o">/</span><span class="mi">2</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">kappas</span><span class="p">))</span>
+    <span class="n">log_prob</span> <span class="o">=</span> <span class="n">kappas</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:]</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">means</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="o">+</span> <span class="n">log_C</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:]</span>
+    <span class="k">return</span> <span class="n">log_prob</span>
+
+
+<div class="viewcode-block" id="vonMisesFisherMixture"><a class="viewcode-back" href="../../../autoapi/spsklearn/mixture/index.html#spsklearn.mixture._von_mises_fisher_mixture.vonMisesFisherMixture">[docs]</a><span class="k">class</span> <span class="nc">vonMisesFisherMixture</span><span class="p">(</span><span class="n">BaseMixture</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;von Mises-Fisher Mixture.</span>
+
+<span class="sd">    Representation of a von Mises-Fisher mixture model probability distribution.</span>
+<span class="sd">    This class allows to estimate the parameters of a von Mises-Fisher mixture</span>
+<span class="sd">    distribution.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    n_components : int, default=1</span>
+<span class="sd">        The number of mixture components.</span>
+
+<span class="sd">    tol : float, default=1e-3</span>
+<span class="sd">        The convergence threshold. EM iterations will stop when the</span>
+<span class="sd">        lower bound average gain is below this threshold.</span>
+
+<span class="sd">    max_iter : int, default=100</span>
+<span class="sd">        The number of EM iterations to perform.</span>
+
+<span class="sd">    n_init : int, default=1</span>
+<span class="sd">        The number of initializations to perform. The best results are kept.</span>
+
+<span class="sd">    init_params : {&#39;spherical-k-means&#39;, &#39;spherical-k-means++&#39;, &#39;random&#39;, &#39;random_from_data&#39;}, \</span>
+<span class="sd">    default=&#39;spherical-k-means++&#39;</span>
+<span class="sd">        The method used to initialize the weights, the means and the</span>
+<span class="sd">        precisions.</span>
+<span class="sd">        String must be one of:</span>
+
+<span class="sd">        - &#39;spherical-k-means&#39; : responsibilities are initialized using spherical k-means.</span>
+<span class="sd">        - &#39;spherical-k-means++&#39; : use the spherical k-means++ method to initialize.</span>
+<span class="sd">        - &#39;random&#39; : responsibilities are initialized randomly.</span>
+<span class="sd">        - &#39;random_from_data&#39; : initial means are randomly selected data points.</span>
+
+<span class="sd">    weights_init : array-like of shape (n_components, ), default=None</span>
+<span class="sd">        The user-provided initial weights.</span>
+<span class="sd">        If it is None, weights are initialized using the `init_params` method.</span>
+
+<span class="sd">    means_init : array-like of shape (n_components, n_features), default=None</span>
+<span class="sd">        The user-provided initial means,</span>
+<span class="sd">        If it is None, means are initialized using the `init_params` method.</span>
+
+<span class="sd">    kappas_init : array-like, default=None</span>
+<span class="sd">        The user-provided initial concentration parameter kappas.</span>
+<span class="sd">        If it is None, kappas are initialized using the &#39;init_params&#39;</span>
+<span class="sd">        method.</span>
+
+<span class="sd">    random_state : int, RandomState instance or None, default=None</span>
+<span class="sd">        Controls the random seed given to the method chosen to initialize the</span>
+<span class="sd">        parameters (see `init_params`).</span>
+<span class="sd">        In addition, it controls the generation of random samples from the</span>
+<span class="sd">        fitted distribution (see the method `sample`).</span>
+<span class="sd">        Pass an int for reproducible output across multiple function calls.</span>
+<span class="sd">        See :term:`Glossary &lt;random_state&gt;`.</span>
+
+<span class="sd">    warm_start : bool, default=False</span>
+<span class="sd">        If &#39;warm_start&#39; is True, the solution of the last fitting is used as</span>
+<span class="sd">        initialization for the next call of fit(). This can speed up</span>
+<span class="sd">        convergence when fit is called several times on similar problems.</span>
+<span class="sd">        In that case, &#39;n_init&#39; is ignored and only a single initialization</span>
+<span class="sd">        occurs upon the first call.</span>
+<span class="sd">        See :term:`the Glossary &lt;warm_start&gt;`.</span>
+
+<span class="sd">    verbose : int, default=0</span>
+<span class="sd">        Enable verbose output. If 1 then it prints the current</span>
+<span class="sd">        initialization and each iteration step. If greater than 1 then</span>
+<span class="sd">        it prints also the log probability and the time needed</span>
+<span class="sd">        for each step.</span>
+
+<span class="sd">    verbose_interval : int, default=10</span>
+<span class="sd">        Number of iteration done before the next print.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    weights_ : array-like of shape (n_components,)</span>
+<span class="sd">        The weights of each mixture components.</span>
+
+<span class="sd">    means_ : array-like of shape (n_components, n_features)</span>
+<span class="sd">        The mean of each mixture component.</span>
+
+<span class="sd">    kappas_ : array-like</span>
+<span class="sd">        The concentration parameter kappas of each mixture component.</span>
+
+<span class="sd">    converged_ : bool</span>
+<span class="sd">        True when convergence of the best fit of EM was reached, False otherwise.</span>
+
+<span class="sd">    n_iter_ : int</span>
+<span class="sd">        Number of step used by the best fit of EM to reach the convergence.</span>
+
+<span class="sd">    lower_bound_ : float</span>
+<span class="sd">        Lower bound value on the log-likelihood (of the training data with</span>
+<span class="sd">        respect to the model) of the best fit of EM.</span>
+
+<span class="sd">    n_features_in_ : int</span>
+<span class="sd">        Number of features seen during :term:`fit`.</span>
+
+<span class="sd">    feature_names_in_ : ndarray of shape (`n_features_in_`,)</span>
+<span class="sd">        Names of features seen during :term:`fit`. Defined only when `X`</span>
+<span class="sd">        has feature names that are all strings.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; from spsklearn.mixture import vonMisesFisherMixture</span>
+<span class="sd">    &gt;&gt;&gt; X = np.array([[1, 2], [1, 4], [1, 0], [10, 2], [10, 4], [10, 0]])</span>
+<span class="sd">    &gt;&gt;&gt; vmf = vonMisesFisherMixture(n_components=2, random_state=0).fit(X)</span>
+<span class="sd">    &gt;&gt;&gt; vmf.means_</span>
+<span class="sd">    array([[10.,  2.],</span>
+<span class="sd">           [ 1.,  2.]])</span>
+<span class="sd">    &gt;&gt;&gt; vmf.predict([[0, 0], [12, 3]])</span>
+<span class="sd">    array([1, 0])</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_parameter_constraints</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="o">**</span><span class="n">BaseMixture</span><span class="o">.</span><span class="n">_parameter_constraints</span><span class="p">,</span>
+        <span class="s2">&quot;weights_init&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;array-like&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">],</span>
+        <span class="s2">&quot;means_init&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;array-like&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">],</span>
+        <span class="s2">&quot;kappas_init&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;array-like&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">],</span>
+    <span class="p">}</span>
+    <span class="n">_parameter_constraints</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+        <span class="s2">&quot;init_params&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="n">StrOptions</span><span class="p">({</span><span class="s2">&quot;spherical-k-means&quot;</span><span class="p">,</span> <span class="s2">&quot;random&quot;</span><span class="p">,</span> <span class="s2">&quot;random_from_data&quot;</span><span class="p">,</span> <span class="s2">&quot;spherical-k-means++&quot;</span><span class="p">})</span>
+        <span class="p">],</span>
+    <span class="p">})</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">n_components</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">tol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span>
+        <span class="n">max_iter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+        <span class="n">n_init</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">init_params</span><span class="o">=</span><span class="s2">&quot;spherical-k-means++&quot;</span><span class="p">,</span>
+        <span class="n">weights_init</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">means_init</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">kappas_init</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">warm_start</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">verbose_interval</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">n_components</span><span class="o">=</span><span class="n">n_components</span><span class="p">,</span>
+            <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">,</span>
+            <span class="n">max_iter</span><span class="o">=</span><span class="n">max_iter</span><span class="p">,</span>
+            <span class="n">n_init</span><span class="o">=</span><span class="n">n_init</span><span class="p">,</span>
+            <span class="n">init_params</span><span class="o">=</span><span class="n">init_params</span><span class="p">,</span>
+            <span class="n">random_state</span><span class="o">=</span><span class="n">random_state</span><span class="p">,</span>
+            <span class="n">warm_start</span><span class="o">=</span><span class="n">warm_start</span><span class="p">,</span>
+            <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span>
+            <span class="n">verbose_interval</span><span class="o">=</span><span class="n">verbose_interval</span><span class="p">,</span>
+            <span class="n">reg_covar</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="c1"># discarded in vMF</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">weights_init</span> <span class="o">=</span> <span class="n">weights_init</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">means_init</span> <span class="o">=</span> <span class="n">means_init</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kappas_init</span> <span class="o">=</span> <span class="n">kappas_init</span>
+
+    <span class="k">def</span> <span class="nf">_check_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check the von Mises-Fisher mixture parameters are well defined.&quot;&quot;&quot;</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">n_features</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights_init</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">weights_init</span> <span class="o">=</span> <span class="n">_check_weights</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weights_init</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_components</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">means_init</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">means_init</span> <span class="o">=</span> <span class="n">_check_means</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">means_init</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_components</span><span class="p">,</span> <span class="n">n_features</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">kappas_init</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">kappas_init</span> <span class="o">=</span> <span class="n">_check_kappas</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">kappas_init</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">n_components</span><span class="p">,</span>
+            <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_initialize_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">random_state</span><span class="p">):</span>
+        <span class="c1"># If all the initial parameters are all provided, then there is no need to run</span>
+        <span class="c1"># the initialization.</span>
+        <span class="n">compute_resp</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">weights_init</span> <span class="ow">is</span> <span class="kc">None</span>
+            <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">means_init</span> <span class="ow">is</span> <span class="kc">None</span>
+            <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">kappas_init</span> <span class="ow">is</span> <span class="kc">None</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">compute_resp</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_parameters_algorithm</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">random_state</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_initialize</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_initialize_parameters_algorithm</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">random_state</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize the model parameters.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : array-like of shape  (n_samples, n_features)</span>
+
+<span class="sd">        random_state : RandomState</span>
+<span class="sd">            A random number generator instance that controls the random seed</span>
+<span class="sd">            used for the method chosen to initialize the parameters.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">n_samples</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">init_params</span> <span class="o">==</span> <span class="s2">&quot;spherical-k-means&quot;</span><span class="p">:</span>
+            <span class="n">resp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_samples</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_components</span><span class="p">))</span>
+            <span class="n">spkmeans</span> <span class="o">=</span> <span class="n">SphericalKMeans</span><span class="p">(</span>
+                    <span class="n">n_clusters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_components</span><span class="p">,</span> <span class="n">n_init</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">random_state</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+            <span class="n">indices</span> <span class="o">=</span> <span class="n">spkmeans</span><span class="o">.</span><span class="n">labels_</span>
+            <span class="n">resp</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n_samples</span><span class="p">),</span> <span class="n">indices</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">init_params</span> <span class="o">==</span> <span class="s2">&quot;random&quot;</span><span class="p">:</span>
+            <span class="n">resp</span> <span class="o">=</span> <span class="n">random_state</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">n_samples</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_components</span><span class="p">))</span>
+            <span class="n">resp</span> <span class="o">/=</span> <span class="n">resp</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">init_params</span> <span class="o">==</span> <span class="s2">&quot;random_from_data&quot;</span><span class="p">:</span>
+            <span class="n">resp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_samples</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_components</span><span class="p">))</span>
+            <span class="n">center_indices</span> <span class="o">=</span> <span class="n">random_state</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span>
+                <span class="n">n_samples</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_components</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">False</span>
+            <span class="p">)</span>
+            <span class="n">centers</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="n">center_indices</span><span class="p">,</span> <span class="p">:]</span>
+            <span class="n">indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">centers</span><span class="o">.</span><span class="n">T</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">resp</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n_samples</span><span class="p">),</span> <span class="n">indices</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">init_params</span> <span class="o">==</span> <span class="s2">&quot;spherical-k-means++&quot;</span><span class="p">:</span>
+            <span class="n">resp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_samples</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_components</span><span class="p">))</span>
+            <span class="n">centers</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">spherical_k_means_plusplus</span><span class="p">(</span>
+                <span class="n">X</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">n_components</span><span class="p">,</span>
+                <span class="n">random_state</span><span class="o">=</span><span class="n">random_state</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">centers</span><span class="o">.</span><span class="n">T</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">resp</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n_samples</span><span class="p">),</span> <span class="n">indices</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_initialize</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">resp</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_initialize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">resp</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialization of the von Mises-Fisher mixture parameters.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : array-like of shape (n_samples, n_features)</span>
+
+<span class="sd">        resp : array-like of shape (n_samples, n_components)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">n_samples</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">weights</span><span class="p">,</span> <span class="n">means</span><span class="p">,</span> <span class="n">kappas</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">resp</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">weights</span><span class="p">,</span> <span class="n">means</span><span class="p">,</span> <span class="n">kappas</span> <span class="o">=</span> <span class="n">_estimate_von_mises_fisher_parameters</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">resp</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights_init</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">weights</span> <span class="o">/=</span> <span class="n">n_samples</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">weights_</span> <span class="o">=</span> <span class="n">weights</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights_init</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights_init</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">means_</span> <span class="o">=</span> <span class="n">means</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">means_init</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">means_init</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kappas_</span> <span class="o">=</span> <span class="n">kappas</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">kappas_init</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">kappas_init</span>
+
+    <span class="nd">@_fit_context</span><span class="p">(</span><span class="n">prefer_skip_nested_validation</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="viewcode-block" id="vonMisesFisherMixture.fit_predict"><a class="viewcode-back" href="../../../autoapi/spsklearn/mixture/_von_mises_fisher_mixture/index.html#spsklearn.mixture._von_mises_fisher_mixture.vonMisesFisherMixture.fit_predict">[docs]</a>    <span class="k">def</span> <span class="nf">fit_predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Estimate model parameters using X and predict the labels for X.</span>
+
+<span class="sd">        The method fits the model n_init times and sets the parameters with</span>
+<span class="sd">        which the model has the largest likelihood or lower bound. Within each</span>
+<span class="sd">        trial, the method iterates between E-step and M-step for `max_iter`</span>
+<span class="sd">        times until the change of likelihood or lower bound is less than</span>
+<span class="sd">        `tol`, otherwise, a :class:`~sklearn.exceptions.ConvergenceWarning` is</span>
+<span class="sd">        raised. After fitting, it predicts the most probable label for the</span>
+<span class="sd">        input data points.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : array-like of shape (n_samples, n_features)</span>
+<span class="sd">            List of n_features-dimensional data points. Each row</span>
+<span class="sd">            corresponds to a single data point.</span>
+
+<span class="sd">        y : Ignored</span>
+<span class="sd">            Not used, present for API consistency by convention.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        labels : array, shape (n_samples,)</span>
+<span class="sd">            Component labels.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_data</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">],</span> <span class="n">ensure_min_samples</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">check_spherical_array</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">spherical_axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_components</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Expected n_samples &gt;= n_components &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;but got n_components = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">n_components</span><span class="si">}</span><span class="s2">, &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;n_samples = </span><span class="si">{</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_parameters</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
+        <span class="c1"># if we enable warm_start, we will have a unique initialisation</span>
+        <span class="n">do_init</span> <span class="o">=</span> <span class="ow">not</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">warm_start</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;converged_&quot;</span><span class="p">))</span>
+        <span class="n">n_init</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_init</span> <span class="k">if</span> <span class="n">do_init</span> <span class="k">else</span> <span class="mi">1</span>
+
+        <span class="n">max_lower_bound</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">converged_</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="n">random_state</span> <span class="o">=</span> <span class="n">check_random_state</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">)</span>
+
+        <span class="n">n_samples</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span>
+        <span class="k">for</span> <span class="n">init</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_init</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_print_verbose_msg_init_beg</span><span class="p">(</span><span class="n">init</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">do_init</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_parameters</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">random_state</span><span class="p">)</span>
+
+            <span class="n">lower_bound</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span> <span class="k">if</span> <span class="n">do_init</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">lower_bound_</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_iter</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">best_params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_parameters</span><span class="p">()</span>
+                <span class="n">best_n_iter</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">n_iter</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_iter</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+                    <span class="n">prev_lower_bound</span> <span class="o">=</span> <span class="n">lower_bound</span>
+
+                    <span class="n">log_prob_norm_avg</span><span class="p">,</span> <span class="n">log_resp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_e_step</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+                    <span class="c1"># log_resp = log (alpha_i * P(x_j|z=i))</span>
+                    <span class="c1"># log_prob_norm_avg = average_j( log \sum_i (alpha_i * P(x_j|z=i)) )</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_m_step</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">log_resp</span><span class="p">)</span>
+                    <span class="n">lower_bound</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_lower_bound</span><span class="p">(</span><span class="n">log_resp</span><span class="p">,</span> <span class="n">log_prob_norm_avg</span><span class="p">)</span>
+
+                    <span class="n">change</span> <span class="o">=</span> <span class="n">lower_bound</span> <span class="o">-</span> <span class="n">prev_lower_bound</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_print_verbose_msg_iter_end</span><span class="p">(</span><span class="n">n_iter</span><span class="p">,</span> <span class="n">change</span><span class="p">)</span>
+
+                    <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">change</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">converged_</span> <span class="o">=</span> <span class="kc">True</span>
+                        <span class="k">break</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">_print_verbose_msg_init_end</span><span class="p">(</span><span class="n">lower_bound</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">lower_bound</span> <span class="o">&gt;</span> <span class="n">max_lower_bound</span> <span class="ow">or</span> <span class="n">max_lower_bound</span> <span class="o">==</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">:</span>
+                    <span class="n">max_lower_bound</span> <span class="o">=</span> <span class="n">lower_bound</span>
+                    <span class="n">best_params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_parameters</span><span class="p">()</span>
+                    <span class="n">best_n_iter</span> <span class="o">=</span> <span class="n">n_iter</span>
+
+        <span class="c1"># Should only warn about convergence if max_iter &gt; 0, otherwise</span>
+        <span class="c1"># the user is assumed to have used 0-iters initialization</span>
+        <span class="c1"># to get the initial means.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">converged_</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_iter</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="s2">&quot;Initialization </span><span class="si">%d</span><span class="s2"> did not converge. &quot;</span>
+                <span class="s2">&quot;Try different init parameters, &quot;</span>
+                <span class="s2">&quot;or increase max_iter, tol &quot;</span>
+                <span class="s2">&quot;or check for degenerate data.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">init</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span>
+                <span class="n">ConvergenceWarning</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_parameters</span><span class="p">(</span><span class="n">best_params</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_iter_</span> <span class="o">=</span> <span class="n">best_n_iter</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lower_bound_</span> <span class="o">=</span> <span class="n">max_lower_bound</span>
+
+        <span class="c1"># Always do a final e-step to guarantee that the labels returned by</span>
+        <span class="c1"># fit_predict(X) are always consistent with fit(X).predict(X)</span>
+        <span class="c1"># for any value of max_iter and tol (and any random_state).</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">log_resp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_e_step</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">log_resp</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_e_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;E step.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : array-like of shape (n_samples, n_features)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        log_prob_norm : float</span>
+<span class="sd">            Mean of the logarithms of the probabilities of each sample in X</span>
+<span class="sd">                average_j( \log \sum_{i=1}^C (\alpha_i * P(x_j|z=i)) )</span>
+
+<span class="sd">        log_responsibility : array, shape (n_samples, n_components)</span>
+<span class="sd">            Logarithm of the posterior probabilities (or responsibilities) of</span>
+<span class="sd">            the point of each sample in X.</span>
+<span class="sd">                \log (\alpha_i * P(x_j|z=i))</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">log_prob_norm</span><span class="p">,</span> <span class="n">log_resp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_estimate_log_prob_resp</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">log_prob_norm</span><span class="p">),</span> <span class="n">log_resp</span>
+
+    <span class="k">def</span> <span class="nf">_m_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">log_resp</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;M step.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : array-like of shape (n_samples, n_features)</span>
+
+<span class="sd">        log_resp : array-like of shape (n_samples, n_components)</span>
+<span class="sd">            Logarithm of the posterior probabilities (or responsibilities) of</span>
+<span class="sd">            the point of each sample in X.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">weights_</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">means_</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">kappas_</span> <span class="o">=</span> <span class="n">_estimate_von_mises_fisher_parameters</span><span class="p">(</span>
+            <span class="n">X</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">log_resp</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">weights_</span> <span class="o">/=</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights_</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_estimate_log_prob</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">_estimate_log_von_mises_fisher_prob</span><span class="p">(</span>
+            <span class="n">X</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">means_</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">kappas_</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_estimate_log_prob_resp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Estimate log probabilities and responsibilities for each sample.</span>
+
+<span class="sd">        Compute the log probabilities, weighted log probabilities per</span>
+<span class="sd">        component and responsibilities for each sample in X with respect to</span>
+<span class="sd">        the current state of the model.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : array-like of shape (n_samples, n_features)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        log_prob_norm : array, shape (n_samples,)</span>
+<span class="sd">            \log \sum_{i=1}^C (\alpha_i * P(x_j|z=i))</span>
+
+<span class="sd">        log_responsibilities : array, shape (n_samples, n_components)</span>
+<span class="sd">            logarithm of the responsibilities</span>
+<span class="sd">            \log (\alpha_i * P(x_j|z=i))</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">weighted_log_prob</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_estimate_weighted_log_prob</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="n">log_prob_norm</span> <span class="o">=</span> <span class="n">logsumexp</span><span class="p">(</span><span class="n">weighted_log_prob</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">errstate</span><span class="p">(</span><span class="n">under</span><span class="o">=</span><span class="s2">&quot;ignore&quot;</span><span class="p">):</span>
+            <span class="c1"># ignore underflow</span>
+            <span class="n">log_resp</span> <span class="o">=</span> <span class="n">weighted_log_prob</span> <span class="o">-</span> <span class="n">log_prob_norm</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">log_prob_norm</span><span class="p">,</span> <span class="n">log_resp</span>
+
+    <span class="k">def</span> <span class="nf">_estimate_log_weights</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weights_</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_estimate_weighted_log_prob</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Estimate the weighted log-probabilities, log P(X | Z) + log weights.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : array-like of shape (n_samples, n_features)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        weighted_log_prob : array, shape (n_samples, n_component)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">log_prob</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_estimate_log_prob</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="n">log_weights</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_estimate_log_weights</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">log_prob</span> <span class="o">+</span> <span class="n">log_weights</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:]</span>
+
+    <span class="k">def</span> <span class="nf">_compute_lower_bound</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">log_prob_norm</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">log_prob_norm</span>
+
+    <span class="k">def</span> <span class="nf">_get_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">weights_</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">means_</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">kappas_</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_set_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+        <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">weights_</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">means_</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">kappas_</span><span class="p">,</span>
+        <span class="p">)</span> <span class="o">=</span> <span class="n">params</span>
+
+    <span class="k">def</span> <span class="nf">_n_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the number of free parameters in the model.&quot;&quot;&quot;</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">n_features</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">means_</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">kappa_params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_components</span>
+        <span class="n">mean_params</span> <span class="o">=</span> <span class="n">n_features</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_components</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">kappa_params</span> <span class="o">+</span> <span class="n">mean_params</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_components</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="c1">### fir BIC and AIC, </span>
+    <span class="c1">###     ref: https://scikit-learn.org/stable/modules/linear_model.html#mathematical-details</span>
+<div class="viewcode-block" id="vonMisesFisherMixture.bic"><a class="viewcode-back" href="../../../autoapi/spsklearn/mixture/_von_mises_fisher_mixture/index.html#spsklearn.mixture._von_mises_fisher_mixture.vonMisesFisherMixture.bic">[docs]</a>    <span class="k">def</span> <span class="nf">bic</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Bayesian information criterion for the current model on the input X.</span>
+
+<span class="sd">        You can refer to this :ref:`mathematical section &lt;aic_bic&gt;` for more</span>
+<span class="sd">        details regarding the formulation of the BIC used.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : array of shape (n_samples, n_dimensions)</span>
+<span class="sd">            The input samples.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        bic : float</span>
+<span class="sd">            The lower the better.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="o">*</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n_parameters</span><span class="p">()</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="vonMisesFisherMixture.aic"><a class="viewcode-back" href="../../../autoapi/spsklearn/mixture/_von_mises_fisher_mixture/index.html#spsklearn.mixture._von_mises_fisher_mixture.vonMisesFisherMixture.aic">[docs]</a>    <span class="k">def</span> <span class="nf">aic</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Akaike information criterion for the current model on the input X.</span>
+
+<span class="sd">        You can refer to this :ref:`mathematical section &lt;aic_bic&gt;` for more</span>
+<span class="sd">        details regarding the formulation of the AIC used.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : array of shape (n_samples, n_dimensions)</span>
+<span class="sd">            The input samples.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        aic : float</span>
+<span class="sd">            The lower the better.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="o">*</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n_parameters</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="vonMisesFisherMixture.sample"><a class="viewcode-back" href="../../../autoapi/spsklearn/mixture/_von_mises_fisher_mixture/index.html#spsklearn.mixture._von_mises_fisher_mixture.vonMisesFisherMixture.sample">[docs]</a>    <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_samples</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Generate random samples from the fitted von Mises-Fisher mixture distribution.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        n_samples : int, default=1</span>
+<span class="sd">            Number of samples to generate.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        X : array, shape (n_samples, n_features)</span>
+<span class="sd">            Randomly generated sample.</span>
+
+<span class="sd">        y : array, shape (nsamples,)</span>
+<span class="sd">            Component labels.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">check_is_fitted</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">n_samples</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Invalid value for &#39;n_samples&#39;: </span><span class="si">%d</span><span class="s2"> . The sampling requires at &quot;</span>
+                <span class="s2">&quot;least one sample.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_components</span><span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="n">_</span><span class="p">,</span> <span class="n">n_features</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">means_</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">rng</span> <span class="o">=</span> <span class="n">check_random_state</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_state</span><span class="p">)</span>
+        <span class="n">n_samples_comp</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">multinomial</span><span class="p">(</span><span class="n">n_samples</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights_</span><span class="p">)</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="n">vonmises_fisher</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span><span class="n">mean</span><span class="p">,</span> <span class="n">kappa</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">sample</span><span class="p">),</span> <span class="n">random_state</span><span class="o">=</span><span class="n">rng</span><span class="p">)</span>
+                <span class="k">for</span> <span class="p">(</span><span class="n">mean</span><span class="p">,</span> <span class="n">kappa</span><span class="p">,</span> <span class="n">sample</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">means_</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">kappas_</span><span class="p">,</span> <span class="n">n_samples_comp</span>
+                <span class="p">)</span>
+            <span class="p">]</span>
+        <span class="p">)</span>
+
+        <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">sample</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span> <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">sample</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">n_samples_comp</span><span class="p">)]</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright Jiaqi Li
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

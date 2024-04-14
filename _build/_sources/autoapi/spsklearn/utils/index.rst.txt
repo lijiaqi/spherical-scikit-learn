@@ -1,0 +1,52 @@
+:mod:`spsklearn.utils`
+======================
+
+.. py:module:: spsklearn.utils
+
+.. autoapi-nested-parse::
+
+   The :mod:`spsklearn.utils` module includes various utilities.
+
+
+
+Submodules
+----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+
+   sampling/index.rst
+   validation/index.rst
+
+
+Package Contents
+----------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   spsklearn.utils.check_spherical_array
+   spsklearn.utils.draw_von_mises_fisher
+   spsklearn.utils.draw_von_mises_fisher_mixture
+
+
+.. function:: check_spherical_array(array, spherical_axis=1)
+
+
+.. function:: draw_von_mises_fisher(mu, kappa, n_samples, seed=0)
+
+
+.. function:: draw_von_mises_fisher_mixture(mus, kappas, n_samples, weights, seed=0)
+
+   _summary_
+
+   :param mus: shape=(n_components, n_features)
+   :param kappas: shape=(n_components,)
+   :param n_samples:
+   :type n_samples: int
+   :param weights: shape=(n_components,)
+
+

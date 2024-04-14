@@ -1,0 +1,17 @@
+:mod:`spsklearn`
+================
+
+.. py:module:: spsklearn
+
+
+Subpackages
+-----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 3
+
+   cluster/index.rst
+   mixture/index.rst
+   utils/index.rst
+
+

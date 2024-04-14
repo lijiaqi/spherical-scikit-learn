@@ -1,0 +1,6 @@
+<map id="inheritancee6e701fe37" name="inheritancee6e701fe37">
+<area shape="rect" id="node1" title="Base class for all estimators in scikit&#45;learn." alt="" coords="5,5,123,31"/>
+<area shape="rect" id="node2" title="Base class for mixture models." alt="" coords="171,31,275,56"/>
+<area shape="rect" id="node4" href="_von_mises_fisher_mixture/index.html#spsklearn.mixture._von_mises_fisher_mixture.vonMisesFisherMixture" target="_top" title="von Mises&#45;Fisher Mixture." alt="" coords="323,31,496,56"/>
+<area shape="rect" id="node3" title="Mixin class for all density estimators in scikit&#45;learn." alt="" coords="10,55,118,80"/>
+</map>

@@ -1,0 +1,465 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>spsklearn.mixture &mdash; Spherical-Scikit-Learn 0.1.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home" alt="Documentation Home"> Spherical-Scikit-Learn
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Main:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../index.html">API Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Spherical-Scikit-Learn</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li><code class="xref py py-mod docutils literal notranslate"><span class="pre">spsklearn.mixture</span></code></li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../../../_sources/autoapi/spsklearn/mixture/index.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-spsklearn.mixture">
+<span id="spsklearn-mixture"></span><h1><a class="reference internal" href="#module-spsklearn.mixture" title="spsklearn.mixture"><code class="xref py py-mod docutils literal notranslate"><span class="pre">spsklearn.mixture</span></code></a><a class="headerlink" href="#module-spsklearn.mixture" title="Permalink to this headline">¶</a></h1>
+<p>The <a class="reference internal" href="#module-spsklearn.mixture" title="spsklearn.mixture"><code class="xref py py-mod docutils literal notranslate"><span class="pre">spsklearn.mixture</span></code></a> module implements mixture modeling algorithms.</p>
+<div class="section" id="package-contents">
+<h2>Package Contents<a class="headerlink" href="#package-contents" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="classes">
+<h3>Classes<a class="headerlink" href="#classes" title="Permalink to this headline">¶</a></h3>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#spsklearn.mixture.vonMisesFisherMixture" title="spsklearn.mixture.vonMisesFisherMixture"><code class="xref py py-obj docutils literal notranslate"><span class="pre">vonMisesFisherMixture</span></code></a></p></td>
+<td><p>von Mises-Fisher Mixture.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py class">
+<dt id="spsklearn.mixture.vonMisesFisherMixture">
+<em class="property">class </em><code class="sig-prename descclassname">spsklearn.mixture.</code><code class="sig-name descname">vonMisesFisherMixture</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n_components</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">tol</span><span class="o">=</span><span class="default_value">0.001</span></em>, <em class="sig-param"><span class="n">max_iter</span><span class="o">=</span><span class="default_value">100</span></em>, <em class="sig-param"><span class="n">n_init</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">init_params</span><span class="o">=</span><span class="default_value">'spherical-k-means++'</span></em>, <em class="sig-param"><span class="n">weights_init</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">means_init</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">kappas_init</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">random_state</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">warm_start</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">verbose_interval</span><span class="o">=</span><span class="default_value">10</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/spsklearn/mixture/_von_mises_fisher_mixture.html#vonMisesFisherMixture"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spsklearn.mixture.vonMisesFisherMixture" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">sklearn.mixture._base.BaseMixture</span></code></p>
+<div class="graphviz"><img src="../../../_images/inheritance-4b75f4e6ffc722d0e65e804f824187a04d945850.png" alt="Inheritance diagram of spsklearn.mixture.vonMisesFisherMixture" usemap="#inheritancee6e701fe37" class="inheritance graphviz" /></div>
+<map id="inheritancee6e701fe37" name="inheritancee6e701fe37">
+<area shape="rect" id="node4" href="_von_mises_fisher_mixture/index.html#spsklearn.mixture._von_mises_fisher_mixture.vonMisesFisherMixture" target="_top" title="von Mises&#45;Fisher Mixture." alt="" coords="323,31,496,56"/>
+</map><p>von Mises-Fisher Mixture.</p>
+<p>Representation of a von Mises-Fisher mixture model probability distribution.
+This class allows to estimate the parameters of a von Mises-Fisher mixture
+distribution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n_components</strong> (<em>int</em><em>, </em><em>default=1</em>) – The number of mixture components.</p></li>
+<li><p><strong>tol</strong> (<em>float</em><em>, </em><em>default=1e-3</em>) – The convergence threshold. EM iterations will stop when the
+lower bound average gain is below this threshold.</p></li>
+<li><p><strong>max_iter</strong> (<em>int</em><em>, </em><em>default=100</em>) – The number of EM iterations to perform.</p></li>
+<li><p><strong>n_init</strong> (<em>int</em><em>, </em><em>default=1</em>) – The number of initializations to perform. The best results are kept.</p></li>
+<li><p><strong>init_params</strong> (<em>{'spherical-k-means'</em><em>, </em><em>'spherical-k-means++'</em><em>, </em><em>'random'</em><em>, </em><em>'random_from_data'}</em><em>,     </em><em>default='spherical-k-means++'</em>) – <p>The method used to initialize the weights, the means and the
+precisions.
+String must be one of:</p>
+<ul>
+<li><p>’spherical-k-means’ : responsibilities are initialized using spherical k-means.</p></li>
+<li><p>’spherical-k-means++’ : use the spherical k-means++ method to initialize.</p></li>
+<li><p>’random’ : responsibilities are initialized randomly.</p></li>
+<li><p>’random_from_data’ : initial means are randomly selected data points.</p></li>
+</ul>
+</p></li>
+<li><p><strong>weights_init</strong> (<em>array-like of shape</em><em> (</em><em>n_components</em><em>, </em><em>)</em><em>, </em><em>default=None</em>) – The user-provided initial weights.
+If it is None, weights are initialized using the <cite>init_params</cite> method.</p></li>
+<li><p><strong>means_init</strong> (<em>array-like of shape</em><em> (</em><em>n_components</em><em>, </em><em>n_features</em><em>)</em><em>, </em><em>default=None</em>) – The user-provided initial means,
+If it is None, means are initialized using the <cite>init_params</cite> method.</p></li>
+<li><p><strong>kappas_init</strong> (<em>array-like</em><em>, </em><em>default=None</em>) – The user-provided initial concentration parameter kappas.
+If it is None, kappas are initialized using the ‘init_params’
+method.</p></li>
+<li><p><strong>random_state</strong> (<em>int</em><em>, </em><em>RandomState instance</em><em> or </em><em>None</em><em>, </em><em>default=None</em>) – Controls the random seed given to the method chosen to initialize the
+parameters (see <cite>init_params</cite>).
+In addition, it controls the generation of random samples from the
+fitted distribution (see the method <cite>sample</cite>).
+Pass an int for reproducible output across multiple function calls.
+See <span class="xref std std-term">Glossary</span>.</p></li>
+<li><p><strong>warm_start</strong> (<em>bool</em><em>, </em><em>default=False</em>) – If ‘warm_start’ is True, the solution of the last fitting is used as
+initialization for the next call of fit(). This can speed up
+convergence when fit is called several times on similar problems.
+In that case, ‘n_init’ is ignored and only a single initialization
+occurs upon the first call.
+See <span class="xref std std-term">the Glossary</span>.</p></li>
+<li><p><strong>verbose</strong> (<em>int</em><em>, </em><em>default=0</em>) – Enable verbose output. If 1 then it prints the current
+initialization and each iteration step. If greater than 1 then
+it prints also the log probability and the time needed
+for each step.</p></li>
+<li><p><strong>verbose_interval</strong> (<em>int</em><em>, </em><em>default=10</em>) – Number of iteration done before the next print.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt id="spsklearn.mixture.vonMisesFisherMixture.weights_">
+<code class="sig-name descname">weights_</code><a class="headerlink" href="#spsklearn.mixture.vonMisesFisherMixture.weights_" title="Permalink to this definition">¶</a></dt>
+<dd><p>The weights of each mixture components.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>array-like of shape (n_components,)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="spsklearn.mixture.vonMisesFisherMixture.means_">
+<code class="sig-name descname">means_</code><a class="headerlink" href="#spsklearn.mixture.vonMisesFisherMixture.means_" title="Permalink to this definition">¶</a></dt>
+<dd><p>The mean of each mixture component.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>array-like of shape (n_components, n_features)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="spsklearn.mixture.vonMisesFisherMixture.kappas_">
+<code class="sig-name descname">kappas_</code><a class="headerlink" href="#spsklearn.mixture.vonMisesFisherMixture.kappas_" title="Permalink to this definition">¶</a></dt>
+<dd><p>The concentration parameter kappas of each mixture component.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>array-like</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="spsklearn.mixture.vonMisesFisherMixture.converged_">
+<code class="sig-name descname">converged_</code><a class="headerlink" href="#spsklearn.mixture.vonMisesFisherMixture.converged_" title="Permalink to this definition">¶</a></dt>
+<dd><p>True when convergence of the best fit of EM was reached, False otherwise.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="spsklearn.mixture.vonMisesFisherMixture.n_iter_">
+<code class="sig-name descname">n_iter_</code><a class="headerlink" href="#spsklearn.mixture.vonMisesFisherMixture.n_iter_" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of step used by the best fit of EM to reach the convergence.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="spsklearn.mixture.vonMisesFisherMixture.lower_bound_">
+<code class="sig-name descname">lower_bound_</code><a class="headerlink" href="#spsklearn.mixture.vonMisesFisherMixture.lower_bound_" title="Permalink to this definition">¶</a></dt>
+<dd><p>Lower bound value on the log-likelihood (of the training data with
+respect to the model) of the best fit of EM.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="spsklearn.mixture.vonMisesFisherMixture.n_features_in_">
+<code class="sig-name descname">n_features_in_</code><a class="headerlink" href="#spsklearn.mixture.vonMisesFisherMixture.n_features_in_" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of features seen during <span class="xref std std-term">fit</span>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="spsklearn.mixture.vonMisesFisherMixture.feature_names_in_">
+<code class="sig-name descname">feature_names_in_</code><a class="headerlink" href="#spsklearn.mixture.vonMisesFisherMixture.feature_names_in_" title="Permalink to this definition">¶</a></dt>
+<dd><p>Names of features seen during <span class="xref std std-term">fit</span>. Defined only when <cite>X</cite>
+has feature names that are all strings.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>ndarray of shape (<cite>n_features_in_</cite>,)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">spsklearn.mixture</span> <span class="kn">import</span> <span class="n">vonMisesFisherMixture</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">0</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">vmf</span> <span class="o">=</span> <span class="n">vonMisesFisherMixture</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">vmf</span><span class="o">.</span><span class="n">means_</span>
+<span class="go">array([[10.,  2.],</span>
+<span class="go">       [ 1.,  2.]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">vmf</span><span class="o">.</span><span class="n">predict</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">12</span><span class="p">,</span> <span class="mi">3</span><span class="p">]])</span>
+<span class="go">array([1, 0])</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt id="spsklearn.mixture.vonMisesFisherMixture.fit_predict">
+<code class="sig-name descname">fit_predict</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">X</span></em>, <em class="sig-param"><span class="n">y</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#spsklearn.mixture.vonMisesFisherMixture.fit_predict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimate model parameters using X and predict the labels for X.</p>
+<p>The method fits the model n_init times and sets the parameters with
+which the model has the largest likelihood or lower bound. Within each
+trial, the method iterates between E-step and M-step for <cite>max_iter</cite>
+times until the change of likelihood or lower bound is less than
+<cite>tol</cite>, otherwise, a <code class="xref py py-class docutils literal notranslate"><span class="pre">ConvergenceWarning</span></code> is
+raised. After fitting, it predicts the most probable label for the
+input data points.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>array-like of shape</em><em> (</em><em>n_samples</em><em>, </em><em>n_features</em><em>)</em>) – List of n_features-dimensional data points. Each row
+corresponds to a single data point.</p></li>
+<li><p><strong>y</strong> (<em>Ignored</em>) – Not used, present for API consistency by convention.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>labels</strong> – Component labels.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>array, shape (n_samples,)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="spsklearn.mixture.vonMisesFisherMixture.bic">
+<code class="sig-name descname">bic</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">X</span></em><span class="sig-paren">)</span><a class="headerlink" href="#spsklearn.mixture.vonMisesFisherMixture.bic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bayesian information criterion for the current model on the input X.</p>
+<p>You can refer to this <span class="xref std std-ref">mathematical section</span> for more
+details regarding the formulation of the BIC used.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>X</strong> (<em>array of shape</em><em> (</em><em>n_samples</em><em>, </em><em>n_dimensions</em><em>)</em>) – The input samples.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>bic</strong> – The lower the better.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="spsklearn.mixture.vonMisesFisherMixture.aic">
+<code class="sig-name descname">aic</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">X</span></em><span class="sig-paren">)</span><a class="headerlink" href="#spsklearn.mixture.vonMisesFisherMixture.aic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Akaike information criterion for the current model on the input X.</p>
+<p>You can refer to this <span class="xref std std-ref">mathematical section</span> for more
+details regarding the formulation of the AIC used.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>X</strong> (<em>array of shape</em><em> (</em><em>n_samples</em><em>, </em><em>n_dimensions</em><em>)</em>) – The input samples.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>aic</strong> – The lower the better.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="spsklearn.mixture.vonMisesFisherMixture.sample">
+<code class="sig-name descname">sample</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">n_samples</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="headerlink" href="#spsklearn.mixture.vonMisesFisherMixture.sample" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate random samples from the fitted von Mises-Fisher mixture distribution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>n_samples</strong> (<em>int</em><em>, </em><em>default=1</em>) – Number of samples to generate.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>X</strong> (<em>array, shape (n_samples, n_features)</em>) – Randomly generated sample.</p></li>
+<li><p><strong>y</strong> (<em>array, shape (nsamples,)</em>) – Component labels.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright Jiaqi Li
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
