@@ -68,7 +68,12 @@ def test_von_mises_fisher_mixture_attributes():
     X = rand_data.X
 
     # test good parameters
-    n_components, tol, n_init, max_iter = 2, 1e-4, 3, 30,
+    n_components, tol, n_init, max_iter = (
+        2,
+        1e-4,
+        3,
+        30,
+    )
     init_params = "random"
     vmf = vonMisesFisherMixture(
         n_components=n_components,
@@ -311,13 +316,13 @@ def test_von_mises_fisher_mixture_fit_predict(seed, max_iter, tol):
 def test_von_mises_fisher_mixture_fit_predict_n_init():
     # Check that fit_predict is equivalent to fit.predict, when n_init > 1
     rng = np.random.RandomState(0)
-    rand_data = RandomData(rng, n_samples=1000, n_components=5, n_features=5
-                           , scale=50)
+    rand_data = RandomData(rng, n_samples=1000, n_components=5, n_features=5, scale=50)
     X = rand_data.X
     vmf = vonMisesFisherMixture(n_components=5, n_init=5, random_state=0)
     y_pred1 = vmf.fit_predict(X)
     y_pred2 = vmf.predict(X)
     assert_array_equal(y_pred1, y_pred2)
+
 
 # TODO: cannot pass on decimal=7
 def test_von_mises_fisher_mixture_fit_best_params():
@@ -330,6 +335,7 @@ def test_von_mises_fisher_mixture_fit_best_params():
         n_components=n_components,
         n_init=1,
         random_state=rng,
+        max_iter=1000,
     )
     ll = []
     for _ in range(n_init):
@@ -343,6 +349,7 @@ def test_von_mises_fisher_mixture_fit_best_params():
     )
     vmf_best.fit(X)
     assert_almost_equal(ll.min(), vmf_best.score(X))
+
 
 # TODO: does not warn
 def test_von_mises_fisher_mixture_fit_convergence_warning():
@@ -409,9 +416,10 @@ def test_von_mises_fisher_mixture_aic_bic():
     # Test the aic and bic criteria
     rng = np.random.RandomState(0)
     n_samples, n_features, n_components = 50, 3, 2
-    X = stats.vonmises_fisher.rvs(mu=np.array([0,0,1]), kappa=50, size=n_samples, 
-                                  random_state=rng)
-    svmfh = stats.vonmises_fisher.entropy(mu=np.array([0,0,1]), kappa=50)
+    X = stats.vonmises_fisher.rvs(
+        mu=np.array([0, 0, 1]), kappa=50, size=n_samples, random_state=rng
+    )
+    svmfh = stats.vonmises_fisher.entropy(mu=np.array([0, 0, 1]), kappa=50)
     vmf = vonMisesFisherMixture(
         n_components=n_components,
         random_state=rng,
@@ -618,7 +626,7 @@ def test_monotonic_likelihood():
     vmf = vonMisesFisherMixture(
         n_components=n_components,
         warm_start=True,
-        max_iter=1,
+        max_iter=1000,
         random_state=rng,
         tol=1e-7,
     )
@@ -745,7 +753,7 @@ def test_von_mises_fisher_mixture_single_component_stable():
 
 
 def test_von_mises_fisher_mixture_all_init_does_not_estimate_von_mises_fisher_parameters(
-    monkeypatch
+    monkeypatch,
 ):
     """When all init parameters are provided, the von Mises-Fisher parameters
     are not estimated.

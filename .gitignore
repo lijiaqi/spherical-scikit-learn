@@ -1,15 +1,15 @@
-data*
-logs*
-*.log
-*__pycache__*
-
+# Python cache and compiled files
+__pycache__/
 *.pyc
 *.pkl
 
-# C extensions
+# Cython-generated C++ files
+spsklearn/**/*.cpp
+
+# Compiled C extensions
 *.so
 
-# Distribution / packaging
+# Build system artifacts
 .Python
 build/
 develop-eggs/
@@ -28,3 +28,12 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
+
+# Installer metadata and local config
+*.manifest
+*.spec
+*.DS_Store
+*.coverage
+*.tox/
+.cache/
+*.pytest_cache/

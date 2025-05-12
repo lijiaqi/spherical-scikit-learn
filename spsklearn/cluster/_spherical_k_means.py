@@ -26,7 +26,7 @@ from sklearn.utils import check_array, check_random_state
 from sklearn.utils._openmp_helpers import _openmp_effective_n_threads
 from sklearn.utils._param_validation import Interval, StrOptions, validate_params
 from sklearn.utils.extmath import row_norms, stable_cumsum
-from sklearn.utils.fixes import threadpool_info, threadpool_limits
+from threadpoolctl import threadpool_info, threadpool_limits
 from sklearn.utils.sparsefuncs import mean_variance_axis
 from sklearn.utils.sparsefuncs_fast import assign_rows_csr
 from sklearn.utils.validation import (

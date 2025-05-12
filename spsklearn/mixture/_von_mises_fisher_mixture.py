@@ -516,7 +516,7 @@ class vonMisesFisherMixture(BaseMixture):
                         self.converged_ = True
                         break
 
-                self._print_verbose_msg_init_end(lower_bound)
+                self._print_verbose_msg_init_end(lower_bound, self.converged_)
 
                 if lower_bound > max_lower_bound or max_lower_bound == -np.inf:
                     max_lower_bound = lower_bound

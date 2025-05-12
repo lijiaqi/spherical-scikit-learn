@@ -1,7 +1,5 @@
-from setuptools import setup, find_packages
-from setuptools import Extension
+from setuptools import setup, Extension, find_packages
 from Cython.Build import cythonize
-
 import numpy as np
 
 extensions = [
@@ -20,11 +18,8 @@ extensions = [
 ]
 
 setup(
-    name="spherical-scikit-learn",
-    ext_modules=cythonize(extensions),
-    include_dirs=[np.get_include()],
-    version="0.1.0",
-    install_requires=["scikit-learn>=1.4.1.post1", "numpy", "scipy>=0.11.0"],
-    zip_safe=False,
     packages=find_packages(),
+    ext_modules=cythonize(extensions, language_level=3),
+    include_dirs=[np.get_include()],
+    zip_safe=False,
 )
