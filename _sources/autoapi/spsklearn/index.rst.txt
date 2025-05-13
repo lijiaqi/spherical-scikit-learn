@@ -1,0 +1,17 @@
+spsklearn
+=========
+
+.. py:module:: spsklearn
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /autoapi/spsklearn/cluster/index
+   /autoapi/spsklearn/mixture/index
+   /autoapi/spsklearn/utils/index
+
+

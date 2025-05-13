@@ -1,0 +1,48 @@
+spsklearn.utils.sampling
+========================
+
+.. py:module:: spsklearn.utils.sampling
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   spsklearn.utils.sampling.seed
+   spsklearn.utils.sampling.D
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   spsklearn.utils.sampling.draw_von_mises_fisher
+   spsklearn.utils.sampling.draw_von_mises_fisher_mixture
+
+
+Module Contents
+---------------
+
+.. py:data:: seed
+   :value: 1
+
+
+.. py:function:: draw_von_mises_fisher(mu, kappa, n_samples, seed=0)
+
+.. py:function:: draw_von_mises_fisher_mixture(mus, kappas, n_samples, weights, seed=0)
+
+   _summary_
+
+   :param mus: shape=(n_components, n_features)
+   :param kappas: shape=(n_components,)
+   :param n_samples:
+   :type n_samples: int
+   :param weights: shape=(n_components,)
+
+
+.. py:data:: D
+   :value: 2
+
+

@@ -1,0 +1,19 @@
+spsklearn.utils.validation
+==========================
+
+.. py:module:: spsklearn.utils.validation
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   spsklearn.utils.validation.check_spherical_array
+
+
+Module Contents
+---------------
+
+.. py:function:: check_spherical_array(array, spherical_axis=1)
+
