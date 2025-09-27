@@ -4,4 +4,4 @@ from . import utils
 
 __all__ = ["cluster", "mixture", "utils"]
 
-__version__ = "0.1.1"
+__version__ = "0.1.2"

@@ -25,8 +25,10 @@ from ..utils import check_spherical_array
 ###############################################################################
 # von Mises-Fisher mixture shape checkers used by the vonMisesFisherMixture class
 
+
 def check_nan(array):
     return np.isnan(array).any()
+
 
 def _check_weights(weights, n_components):
     """Check the user provided 'weights'.
@@ -99,6 +101,7 @@ def _check_kappas(kappas, n_components):
 ###############################################################################
 # von Mises-Fisher mixture parameters estimators (used by the M-Step)
 
+
 def _estimate_von_mises_fisher_parameters(X, resp):
     """Estimate the von Mises-Fisher distribution parameters.
 
@@ -120,8 +123,8 @@ def _estimate_von_mises_fisher_parameters(X, resp):
 
     kappas : array-like
         The concentration parameter kappas of the current components.
-        
-    References: 
+
+    References:
     [1] Clustering on the Unit Hypersphere using von Mises-Fisher Distributions. JMLR 2025.
     """
     n_features = X.shape[1]
@@ -144,7 +147,7 @@ def _estimate_von_mises_fisher_parameters(X, resp):
     #     sol = optimize.root_scalar(eq_for_kappa, method="brentq", bracket=(1e-8, 1e9))
     #     kappas[idx] = sol.root
 
-    # according to [1], kappa = (r*d-r**3)/(1-r**2) 
+    # according to [1], kappa = (r*d-r**3)/(1-r**2)
     kappas = (res_len * n_features - res_len**3) / (1 - res_len**2)
     return nk, means, kappas
 
@@ -171,24 +174,28 @@ def _estimate_log_von_mises_fisher_prob(X, means, kappas):
     -------
     log_prob : array, shape (n_samples, n_components)
         C = kappa**(d/2-1)/( (2*pi)**(d/2) * I_{d/2-1}(kappa)  )
-          = kappa**(d/2-1) * exp(-kappa) 
+          = kappa**(d/2-1) * exp(-kappa)
                 /( (2*pi)**(d/2) * I_{d/2-1}(kappa)*exp(-kappa)  )
-            = kappa**(d/2-1) * exp(-kappa) 
+            = kappa**(d/2-1) * exp(-kappa)
                 /( (2*pi)**(d/2) * scipy.special.ive(d/2-1, kappa) )
-        log C = (d/2-1)*\log(kappa) - kappa - (d/2)*\log(2*pi) - ive(d/2-1, kappa)
+        log C = (d/2-1)*log(kappa) - kappa - (d/2)*log(2*pi) - ive(d/2-1, kappa)
         log p(x; mu, kappa) = kappa * X.dot(mu.T) + log_C
     Notes:
         ive(r, z) = iv(r, z) * exp(-abs(z.real))
-        ive is useful for large arguments z: 
-            for these, iv easily overflows, 
+        ive is useful for large arguments z:
+            for these, iv easily overflows,
             while ive does not due to the exponential scaling.
     """
-    assert means.shape[0]==kappas.shape[0], "means.shape[0]!=kappa.shape[0] !"
-    assert means.shape[1]==X.shape[1], "means.shape[1]!=X.shape[1] !"
+    assert means.shape[0] == kappas.shape[0], "means.shape[0]!=kappa.shape[0] !"
+    assert means.shape[1] == X.shape[1], "means.shape[1]!=X.shape[1] !"
     n_samples, n_features = X.shape
     n_components, _ = means.shape
-    log_C = (n_features/2-1)*np.log(kappas) - kappas - n_features/2 * np.log(2*np.pi) \
-        -  np.log(expBessel(n_features/2-1, kappas))
+    log_C = (
+        (n_features / 2 - 1) * np.log(kappas)
+        - kappas
+        - n_features / 2 * np.log(2 * np.pi)
+        - np.log(expBessel(n_features / 2 - 1, kappas))
+    )
     log_prob = kappas[np.newaxis, :] * np.dot(X, means.T) + log_C[np.newaxis, :]
     return log_prob
 
@@ -311,11 +318,20 @@ class vonMisesFisherMixture(BaseMixture):
         "means_init": ["array-like", None],
         "kappas_init": ["array-like", None],
     }
-    _parameter_constraints.update({
-        "init_params": [
-            StrOptions({"spherical-k-means", "random", "random_from_data", "spherical-k-means++"})
-        ],
-    })
+    _parameter_constraints.update(
+        {
+            "init_params": [
+                StrOptions(
+                    {
+                        "spherical-k-means",
+                        "random",
+                        "random_from_data",
+                        "spherical-k-means++",
+                    }
+                )
+            ],
+        }
+    )
 
     def __init__(
         self,
@@ -343,7 +359,7 @@ class vonMisesFisherMixture(BaseMixture):
             warm_start=warm_start,
             verbose=verbose,
             verbose_interval=verbose_interval,
-            reg_covar=0, # discarded in vMF
+            reg_covar=0,  # discarded in vMF
         )
 
         self.weights_init = weights_init
@@ -395,8 +411,8 @@ class vonMisesFisherMixture(BaseMixture):
         if self.init_params == "spherical-k-means":
             resp = np.zeros((n_samples, self.n_components))
             spkmeans = SphericalKMeans(
-                    n_clusters=self.n_components, n_init=1, random_state=random_state
-                ).fit(X)
+                n_clusters=self.n_components, n_init=1, random_state=random_state
+            ).fit(X)
             indices = spkmeans.labels_
             resp[np.arange(n_samples), indices] = 1
         elif self.init_params == "random":
@@ -468,7 +484,7 @@ class vonMisesFisherMixture(BaseMixture):
         labels : array, shape (n_samples,)
             Component labels.
         """
-        X = self._validate_data(X, dtype=[np.float64, np.float32], ensure_min_samples=2)
+        X = check_array(X, dtype=[np.float64, np.float32], ensure_min_samples=2)
         check_spherical_array(X, spherical_axis=1)
         if X.shape[0] < self.n_components:
             raise ValueError(
@@ -557,12 +573,12 @@ class vonMisesFisherMixture(BaseMixture):
         -------
         log_prob_norm : float
             Mean of the logarithms of the probabilities of each sample in X
-                average_j( \log \sum_{i=1}^C (\alpha_i * P(x_j|z=i)) )
+                average_j( log sum_{i=1}^C (alpha_i * P(x_j|z=i)) )
 
         log_responsibility : array, shape (n_samples, n_components)
             Logarithm of the posterior probabilities (or responsibilities) of
             the point of each sample in X.
-                \log (\alpha_i * P(x_j|z=i))
+                log (alpha_i * P(x_j|z=i))
         """
         log_prob_norm, log_resp = self._estimate_log_prob_resp(X)
         return np.mean(log_prob_norm), log_resp
@@ -584,9 +600,7 @@ class vonMisesFisherMixture(BaseMixture):
         self.weights_ /= self.weights_.sum()
 
     def _estimate_log_prob(self, X):
-        return _estimate_log_von_mises_fisher_prob(
-            X, self.means_, self.kappas_
-        )
+        return _estimate_log_von_mises_fisher_prob(X, self.means_, self.kappas_)
 
     def _estimate_log_prob_resp(self, X):
         """Estimate log probabilities and responsibilities for each sample.
@@ -602,11 +616,11 @@ class vonMisesFisherMixture(BaseMixture):
         Returns
         -------
         log_prob_norm : array, shape (n_samples,)
-            \log \sum_{i=1}^C (\alpha_i * P(x_j|z=i))
+            log sum_{i=1}^C (alpha_i * P(x_j|z=i))
 
         log_responsibilities : array, shape (n_samples, n_components)
             logarithm of the responsibilities
-            \log (\alpha_i * P(x_j|z=i))
+            log (alpha_i * P(x_j|z=i))
         """
         weighted_log_prob = self._estimate_weighted_log_prob(X)
         log_prob_norm = logsumexp(weighted_log_prob, axis=1)
@@ -656,13 +670,13 @@ class vonMisesFisherMixture(BaseMixture):
         kappa_params = self.n_components
         mean_params = n_features * self.n_components
         return int(kappa_params + mean_params + self.n_components - 1)
-    ### fir BIC and AIC, 
-    ###     ref: https://scikit-learn.org/stable/modules/linear_model.html#mathematical-details
+
+    ### for BIC and AIC, see scikit-learn's mixture model documentation
     def bic(self, X):
         """Bayesian information criterion for the current model on the input X.
 
-        You can refer to this :ref:`mathematical section <aic_bic>` for more
-        details regarding the formulation of the BIC used.
+        For more details regarding the formulation of the BIC used,
+        see scikit-learn's mixture model documentation.
 
         Parameters
         ----------
@@ -679,8 +693,8 @@ class vonMisesFisherMixture(BaseMixture):
     def aic(self, X):
         """Akaike information criterion for the current model on the input X.
 
-        You can refer to this :ref:`mathematical section <aic_bic>` for more
-        details regarding the formulation of the AIC used.
+        For more details regarding the formulation of the AIC used,
+        see scikit-learn's mixture model documentation.
 
         Parameters
         ----------

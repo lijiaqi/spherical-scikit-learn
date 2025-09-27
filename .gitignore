@@ -1,3 +1,6 @@
+.vscode/
+.venv/
+
 # Python cache and compiled files
 __pycache__/
 *.pyc
@@ -37,3 +40,8 @@ MANIFEST
 *.tox/
 .cache/
 *.pytest_cache/
+
+# Test-generated plots
+tests/plots/*.png
+tests/plots/*.pdf
+tests/plots/*.svg

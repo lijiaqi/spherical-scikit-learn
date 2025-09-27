@@ -9,7 +9,7 @@
 project = "Spherical-Scikit-Learn"
 copyright = "Jiaqi Li"
 author = "Jiaqi Li"
-release = "0.1.0"
+release = "0.1.2"
 
 
 # -- General configuration ---------------------------------------------------

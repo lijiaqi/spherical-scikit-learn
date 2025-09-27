@@ -22,7 +22,7 @@ class RandomData:
         self.means /= np.linalg.norm(self.means, ord=2, axis=1, keepdims=True)
         self.kappas = rng.rand(n_components) * scale
         self.weights = rng.rand(n_components)
-        self.weights /= self.weight.sum()
+        self.weights /= self.weights.sum()
         self.X, self.Y = draw_von_mises_fisher_mixture(
             self.means, self.kappas, self.n_samples, self.weights, rng
         )

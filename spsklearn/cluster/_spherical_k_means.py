@@ -11,14 +11,13 @@ import numpy as np
 import scipy.sparse as sp
 
 
-# from sklearn.base import (
-#     BaseEstimator,
-#     ClassNamePrefixFeaturesOutMixin,
-#     ClusterMixin,
-#     TransformerMixin,
-#     _fit_context,
-# )
-from sklearn.base import _fit_context
+from sklearn.base import (
+    BaseEstimator,
+    ClassNamePrefixFeaturesOutMixin,
+    ClusterMixin,
+    TransformerMixin,
+    _fit_context,
+)
 from sklearn.exceptions import ConvergenceWarning
 from sklearn.metrics.pairwise import _euclidean_distances, euclidean_distances
 from sklearn.metrics.pairwise import cosine_distances, cosine_similarity
@@ -196,7 +195,7 @@ def _spherical_k_means_plusplus(
     # Pick the remaining n_clusters-1 points
     for c in range(1, n_clusters):
         # Choose center candidates by sampling with probability proportional
-        # to the squared distance to the closest existing center
+        # to the cosine distance to the closest existing center
         rand_vals = random_state.uniform(size=n_local_trials) * current_pot
         candidate_ids = np.searchsorted(
             stable_cumsum(sample_weight * closest_dist_sq), rand_vals
@@ -207,7 +206,7 @@ def _spherical_k_means_plusplus(
         # Compute distances to center candidates
         distance_to_candidates = cosine_distances(X[candidate_ids], X)
 
-        # update closest distances squared and potential for each candidate
+        # update closest distances and potential for each candidate
         np.minimum(closest_dist_sq, distance_to_candidates, out=distance_to_candidates)
         candidates_pot = distance_to_candidates @ sample_weight.reshape(-1, 1)
 
@@ -265,16 +264,14 @@ def spherical_k_means(
     algorithm="lloyd",
     return_n_iter=False,
 ):
-    """Perform K-means clustering algorithm.
-
-    Read more in the :ref:`User Guide <k_means>`.
+    """Perform spherical K-means clustering algorithm.
 
     Parameters
     ----------
     X : {array-like, sparse matrix} of shape (n_samples, n_features)
-        The observations to cluster. It must be noted that the data
-        will be converted to C ordering, which will cause a memory copy
-        if the given data is not C-contiguous.
+        The observations to cluster. Data points should be on the unit sphere
+        (i.e., ||x|| = 1 for each row x). The data will be converted to C ordering,
+        which will cause a memory copy if the given data is not C-contiguous.
 
     n_clusters : int
         The number of clusters to form as well as the number of
@@ -289,9 +286,8 @@ def spherical_k_means(
             (n_clusters, n_features), default='spherical-k-means++'
         Method for initialization:
 
-        - `'spherical-k-means++'` : selects initial cluster centers for k-mean
-          clustering in a smart way to speed up convergence. See section
-          Notes in k_init for more details.
+        - `'spherical-k-means++'` : selects initial cluster centers for spherical
+          k-means clustering in a smart way to speed up convergence.
         - `'random'`: choose `n_clusters` observations (rows) at random from data
           for the initial centroids.
         - If an array is passed, it should be of shape `(n_clusters, n_features)`
@@ -307,12 +303,6 @@ def spherical_k_means(
         When `n_init='auto'`, the number of runs depends on the value of init:
         10 if using `init='random'` or `init` is a callable;
         1 if using `init='spherical-k-means++'` or `init` is an array-like.
-
-        .. versionadded:: 1.2
-           Added 'auto' option for `n_init`.
-
-        .. versionchanged:: 1.4
-           Default value for `n_init` changed to `'auto'`.
 
     max_iter : int, default=300
         Maximum number of iterations of the k-means algorithm to run.
@@ -331,21 +321,15 @@ def spherical_k_means(
         See :term:`Glossary <random_state>`.
 
     copy_x : bool, default=True
-        When pre-computing distances it is more numerically accurate to center
-        the data first. If `copy_x` is True (default), then the original data is
-        not modified. If False, the original data is modified, and put back
-        before the function returns, but small numerical differences may be
-        introduced by subtracting and then adding the data mean. Note that if
-        the original data is not C-contiguous, a copy will be made even if
+        When True (default), the original data is not modified. If False,
+        the original data is modified, and put back before the function returns,
+        but small numerical differences may be introduced. Note that if the
+        original data is not C-contiguous, a copy will be made even if
         `copy_x` is False. If the original data is sparse, but not in CSR format,
         a copy will be made even if `copy_x` is False.
 
     algorithm : {"lloyd"}, default="lloyd"
-        K-means algorithm to use. The classical EM-style algorithm is `"lloyd"`.
-        The `"elkan"` variation can be more efficient on some datasets with
-        well-defined clusters, by using the triangle inequality. However it's
-        more memory intensive due to the allocation of an extra array of shape
-        `(n_samples, n_clusters)`.
+        Spherical K-means algorithm to use. Only Lloyd's algorithm is supported.
 
     return_n_iter : bool, default=False
         Whether or not to return the number of iterations.
@@ -360,7 +344,7 @@ def spherical_k_means(
         i'th observation is closest to.
 
     inertia : float
-        The final value of the inertia criterion (sum of squared distances to
+        The final value of the inertia criterion (sum of cosine distances to
         the closest centroid for all observations in the training set).
 
     best_n_iter : int
@@ -370,19 +354,17 @@ def spherical_k_means(
     Examples
     --------
     >>> import numpy as np
-    >>> from sklearn.cluster import k_means
-    >>> X = np.array([[1, 2], [1, 4], [1, 0],
-    ...               [10, 2], [10, 4], [10, 0]])
-    >>> centroid, label, inertia = k_means(
-    ...     X, n_clusters=2, n_init="auto", random_state=0
+    >>> from spsklearn.cluster import spherical_k_means
+    >>> # Generate spherical data
+    >>> X = np.random.randn(100, 3)
+    >>> X = X / np.linalg.norm(X, axis=1, keepdims=True)  # Normalize to unit sphere
+    >>> centroid, label, inertia = spherical_k_means(
+    ...     X, n_clusters=3, n_init="auto", random_state=0
     ... )
-    >>> centroid
-    array([[10.,  2.],
-           [ 1.,  2.]])
-    >>> label
-    array([1, 1, 1, 0, 0, 0], dtype=int32)
-    >>> inertia
-    16.0
+    >>> centroid.shape
+    (3, 3)
+    >>> label.shape
+    (100,)
     """
     est = SphericalKMeans(
         n_clusters=n_clusters,
@@ -448,7 +430,7 @@ def _spherical_k_means_single_lloyd(
         i'th observation is closest to.
 
     inertia : float
-        The final value of the inertia criterion (sum of squared distances to
+        The final value of the inertia criterion (sum of cosine distances to
         the closest centroid for all observations in the training set).
 
     centroid : ndarray of shape (n_clusters, n_features)
@@ -550,8 +532,9 @@ def _labels_inertia(X, sample_weight, centers, n_threads=1, return_inertia=True)
         The weights for each observation in X.
 
     x_squared_norms : ndarray of shape (n_samples,)
-        Precomputed squared euclidean norm of each data point, to speed up
-        computations.
+        Precomputed squared norms of each data point, to speed up
+        computations. Note: This parameter is not used in spherical k-means
+        as data points are assumed to be on the unit sphere.
 
     centers : ndarray of shape (n_clusters, n_features)
         The cluster centers.
@@ -570,7 +553,7 @@ def _labels_inertia(X, sample_weight, centers, n_threads=1, return_inertia=True)
         The resulting assignment.
 
     inertia : float
-        Sum of squared distances of samples to their closest cluster center.
+        Sum of cosine distances of samples to their closest cluster center.
         Inertia is only returned if return_inertia is True.
     """
     n_samples = X.shape[0]
@@ -645,14 +628,11 @@ class SphericalKMeans(_BaseKMeans):
         * If a callable is passed, it should take arguments X, n_clusters and a\
         random state and return an initialization.
 
-        For an example of how to use the different `init` strategy, see the example
-        entitled :ref:`sphx_glr_auto_examples_cluster_plot_kmeans_digits.py`.
-
     n_init : 'auto' or int, default='auto'
         Number of times the k-means algorithm is run with different centroid
         seeds. The final results is the best output of `n_init` consecutive runs
         in terms of inertia. Several runs are recommended for sparse
-        high-dimensional problems (see :ref:`kmeans_sparse_high_dim`).
+        high-dimensional problems.
 
         When `n_init='auto'`, the number of runs depends on the value of init:
         10 if using `init='random'` or `init` is a callable;
@@ -676,21 +656,15 @@ class SphericalKMeans(_BaseKMeans):
         See :term:`Glossary <random_state>`.
 
     copy_x : bool, default=True
-        When pre-computing distances it is more numerically accurate to center
-        the data first. If copy_x is True (default), then the original data is
-        not modified. If False, the original data is modified, and put back
-        before the function returns, but small numerical differences may be
-        introduced by subtracting and then adding the data mean. Note that if
-        the original data is not C-contiguous, a copy will be made even if
+        When True (default), the original data is not modified. If False,
+        the original data is modified, and put back before the function returns,
+        but small numerical differences may be introduced. Note that if the
+        original data is not C-contiguous, a copy will be made even if
         copy_x is False. If the original data is sparse, but not in CSR format,
         a copy will be made even if copy_x is False.
 
     algorithm : {"lloyd"}, default="lloyd"
-        spherical K-means algorithm to use. The classical EM-style algorithm is `"lloyd"`.
-        The `"elkan"` variation can be more efficient on some datasets with
-        well-defined clusters, by using the triangle inequality. However it's
-        more memory intensive due to the allocation of an extra array of shape
-        `(n_samples, n_clusters)`.
+        Spherical K-means algorithm to use. Only Lloyd's algorithm is supported.
 
     Attributes
     ----------
@@ -703,7 +677,7 @@ class SphericalKMeans(_BaseKMeans):
         Labels of each point
 
     inertia_ : float
-        Sum of squared distances of samples to their closest cluster center,
+        Sum of cosine distances of samples to their closest cluster center,
         weighted by the sample weights if provided.
 
     n_iter_ : int
@@ -718,7 +692,7 @@ class SphericalKMeans(_BaseKMeans):
 
     Notes
     -----
-    The spherical k-means problem is solved using either Lloyd's or Elkan's algorithm.
+    The spherical k-means problem is solved using Lloyd's algorithm.
 
     The average complexity is given by O(k n T), where n is the number of
     samples and T is the number of iteration.
@@ -728,9 +702,8 @@ class SphericalKMeans(_BaseKMeans):
     Refer to :doi:`"How slow is the k-means method?" D. Arthur and S. Vassilvitskii -
     SoCG2006.<10.1145/1137856.1137880>` for more details.
 
-    In practice, the k-means algorithm is very fast (one of the fastest
-    clustering algorithms available), but it falls in local minima. That's why
-    it can be useful to restart it several times.
+    In practice, the spherical k-means algorithm is very fast, but it falls in local
+    minima. That's why it can be useful to restart it several times.
 
     If the algorithm stops before fully converging (because of ``tol`` or
     ``max_iter``), ``labels_`` and ``cluster_centers_`` will not be consistent,
@@ -745,9 +718,15 @@ class SphericalKMeans(_BaseKMeans):
         "copy_x": ["boolean"],
         "algorithm": [StrOptions({"lloyd"})],
     }
-    _parameter_constraints.update({
-        "init": [StrOptions({"spherical-k-means++", "random"}), callable, "array-like"],
-    })
+    _parameter_constraints.update(
+        {
+            "init": [
+                StrOptions({"spherical-k-means++", "random"}),
+                callable,
+                "array-like",
+            ],
+        }
+    )
 
     def __init__(
         self,
@@ -896,7 +875,7 @@ class SphericalKMeans(_BaseKMeans):
         self : object
             Fitted estimator.
         """
-        X = self._validate_data(
+        X = check_array(
             X,
             accept_sparse="csr",
             dtype=[np.float64, np.float32],
@@ -928,7 +907,6 @@ class SphericalKMeans(_BaseKMeans):
         best_inertia, best_labels = None, None
 
         for i in range(self._n_init):
-            # TODO: fix bugs here
             # Initialize centers
             centers_init = self._init_centroids(
                 X,
@@ -976,6 +954,7 @@ class SphericalKMeans(_BaseKMeans):
 
         self.cluster_centers_ = best_centers
         self._n_features_out = self.cluster_centers_.shape[0]
+        self.n_features_in_ = X.shape[1]
         self.labels_ = best_labels
         self.inertia_ = best_inertia
         self.n_iter_ = best_n_iter

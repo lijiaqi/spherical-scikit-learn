@@ -22,17 +22,25 @@ vmfmm.fit(data)
 ```
 
 ## Build and Install
-```
-## build the package (into .wheel) and install
+
+### Quick Install (Recommended)
+```bash
 git clone git@github.com:lijiaqi/spherical-scikit-learn.git
 cd spherical-scikit-learn
-pip install -r requirements.txt
+pip install -e .[dev]  # Install with development dependencies
+```
 
+### Alternative Installation Methods
+```bash
+# Install only runtime dependencies
+pip install -e .
+
+# Install with test dependencies
+pip install -e .[test]
+
+# Build wheel and install
 python -m build
-pip install dist/spherical_scikit_learn-x.x.x-xxx.whl
-
-## Or, directly install
-pip install .
+pip install dist/spherical_scikit_learn-*.whl
 ```
 
 <!-- ## Generate documentations

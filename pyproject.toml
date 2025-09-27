@@ -1,19 +1,21 @@
 [project]
 name = "spherical-scikit-learn"
-version = "0.1.1"
+version = "0.1.2"
+description = "A toolkit for spherical k-means and von Mises-Fisher mixture models"
 dependencies = [
     "scikit-learn>=1.4.1.post1",
-    "numpy",
+    "numpy>=1.20.0",
     "scipy>=0.11.0",
-    "threadpoolctl >= 2.2.0",
+    "threadpoolctl>=2.2.0",
 ]
 
 [project.urls]
-Documentation = "https://github.com/lijiaqi/spherical-scikit-learn.git"
-Repository = "https://lijiaqi.github.io/spherical-scikit-learn/"
+Documentation = "https://lijiaqi.github.io/spherical-scikit-learn/"
+Repository = "https://github.com/lijiaqi/spherical-scikit-learn.git"
 
 [project.optional-dependencies]
 test = ["pytest", "matplotlib"]
+dev = ["pytest", "matplotlib", "build", "setuptools>=42", "Cython>=3.0"]
 
 [build-system]
 requires = [
@@ -28,7 +30,12 @@ build-backend = "setuptools.build_meta"
 "spsklearn.cluster" = ["*.pyx", "*.pxd"]
 
 [tool.setuptools]
-packages = ["spsklearn"]
+packages = [
+    "spsklearn",
+    "spsklearn.cluster",
+    "spsklearn.mixture",
+    "spsklearn.utils",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
